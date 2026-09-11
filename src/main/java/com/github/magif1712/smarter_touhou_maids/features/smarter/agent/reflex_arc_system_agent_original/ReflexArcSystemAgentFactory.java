@@ -91,7 +91,7 @@ public class ReflexArcSystemAgentFactory implements AgentFactory, ParamPanelProv
                         Component.translatable("option.smarter_touhou_maids.allow_possession"),
                         Component.translatable(
                                 "option.smarter_touhou_maids.allow_possession.tooltip",
-                                Component.keybind("key.smarter_touhou_maids.possession_original")),
+                                Component.keybind("key.smarter_touhou_maids.possession")),
                         maid -> String.valueOf(AutoTask.isPossessionEnabled(maid)),
                         (maid, text) -> AutoTask.setPossessionEnabled(maid, Boolean.parseBoolean(text.trim())))
                 .withControlHint("toggle"));

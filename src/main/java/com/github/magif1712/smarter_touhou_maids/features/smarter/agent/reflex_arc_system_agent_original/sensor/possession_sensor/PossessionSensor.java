@@ -19,7 +19,7 @@ import com.github.magif1712.smarter_touhou_maids.features.smarter.agent.reflex_a
  *       藏在 {@code vision/} 子包。</li>
  *   <li><b>possession（当眼睛）</b>：玩家附身女仆，充当女仆的"眼睛"与区块加载器——
  *       没有玩家附身就没有屏幕画面可采，也就没有视觉输入。这是感受器的输入源子模式，
- *       藏在 {@code possession/} 子包（由 {@link com.github.magif1712.smarter_touhou_maids.features.smarter.agent.reflex_arc_system_agent_original.sensor.possession_sensor.possession.core.PossessionManager}
+ *       藏在 {@code possession/} 子包（由 {@link com.github.magif1712.smarter_touhou_maids.features.smarter.possession.core.PossessionManager}
  *       管理附身状态，本类只编排采集，不直接碰附身逻辑）。</li>
  * </ul>
  * 两个子模式合起来才是完整的"眼"：possession 让玩家当眼睛（提供画面源），vision 去看（采集画面）。

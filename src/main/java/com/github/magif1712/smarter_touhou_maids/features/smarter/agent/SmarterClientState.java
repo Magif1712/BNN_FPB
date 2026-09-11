@@ -116,4 +116,17 @@ public final class SmarterClientState {
             }
         }
     }
+
+    /**
+     * 清理指定 maid 的所有 pending 缓存（激活态 + 模式选择）。
+     * <p>
+     * 在 maid 离开客户端 level 时调用（真善美第4条：把"pending 缓存生命周期与 maid 实体绑定"
+     * 这个不实在的期望，实在化为显式清理）。安全前提：第2步的 StartTracking 初始同步保证
+     * maid 重新出现时 pending 会重新填充——故 chunk unload 后 reload 不丢数据。
+     */
+    public void removeMaid(UUID maidUUID) {
+        if (maidUUID == null) return;
+        pendingSmarterSync.remove(maidUUID);
+        pendingModeSync.remove(maidUUID);
+    }
 }

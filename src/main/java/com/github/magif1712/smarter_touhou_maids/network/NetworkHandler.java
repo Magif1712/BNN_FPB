@@ -1,6 +1,7 @@
 package com.github.magif1712.smarter_touhou_maids.network;
 
 import com.github.magif1712.smarter_touhou_maids.SmarterTouhouMaids;
+import com.github.magif1712.smarter_touhou_maids.features.smarter.possession.network.PossessionNetwork;
 import com.github.magif1712.smarter_touhou_maids.features.smarter.agent.reflex_arc_system_agent.AgentNetwork;
 import com.github.magif1712.smarter_touhou_maids.features.smarter.network.ClientboundAiModeSyncPacket;
 import com.github.magif1712.smarter_touhou_maids.features.smarter.network.ClientboundParamSyncPacket;
@@ -32,11 +33,11 @@ public final class NetworkHandler {
     );
 
     public static void init() {
-        // === 代理分支索引段（各包自带贡献，依次分配）===
+        // === 附身包（smarter 的模式，统一注册一次）===
         int index = 0;
-        // 新代理（reflex_arc_system_agent）：4 个 possession 包 + ActionIntent（索引 0-4）
+        index = PossessionNetwork.registerPackets(INSTANCE, index);
+        // === 代理分支索引段（各包自带贡献，依次分配）===
         index = AgentNetwork.registerPackets(INSTANCE, index);
-        // 原初代理（reflex_arc_system_agent_original）：位平面链同构包（索引 5-9）
         index = com.github.magif1712.smarter_touhou_maids.features.smarter.agent.reflex_arc_system_agent_original.AgentNetwork.registerPackets(INSTANCE, index);
 
         // === smarter 通用包（与代理无关）===

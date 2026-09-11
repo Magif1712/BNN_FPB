@@ -12,6 +12,9 @@ import com.github.magif1712.smarter_touhou_maids.features.smarter.agent.reflex_a
  * 方向标记用 /* -&gt; *&#47; 注释（设计原则第5条）：左边入参，右边出参。
  * <p>
  * 伪代码 {@code ys[i].C} 的 Java 等价：{@code mapper.extractC(ys[i], stream)}——算子签名与伪代码一致。
+ * <p>
+ * 重构：bw 传入 {@code ys[i]}——StoreTrace 下 trace_y 即 ys[i]，一份写入两方消费
+ * （设计原则第5条：DPS 式编程，出参由调用方注入）。
  */
 public final class GradCellOp {
 
@@ -25,11 +28,11 @@ public final class GradCellOp {
                                   FittableMapper buf_mapper) {
         // 阶段一：探索 + 反向（buf_tC 出参 → tC 原地更新为 C2）
         fw(mapper, N, G_seq, dt, tC, anc_seq, stream /* -> */, buf_x, ys, fw_traces);
-        bw(mapper, N, fw_traces, anc_seq, tC, stream /* -> */, buf_t, buf_tC, buf_mapper);
+        bw(mapper, N, fw_traces, ys, anc_seq, tC, stream /* -> */, buf_t, buf_tC, buf_mapper);
 
         // 阶段二：从 C2（写后的 tC）重放 + 反向只更新权重（buf_tC=null 跳过梯度外拷）
         fw(mapper, N, G_seq, dt, tC, anc_seq, stream /* -> */, buf_x, ys, fw_traces);
-        bw(mapper, N, fw_traces, anc_seq, tC, stream /* -> */, buf_t, null, buf_mapper);
+        bw(mapper, N, fw_traces, ys, anc_seq, tC, stream /* -> */, buf_t, null, buf_mapper);
     }
 
     private static void fw(FittableMapper mapper, int N, boolean[][] G_seq, long dt,
@@ -42,12 +45,12 @@ public final class GradCellOp {
         }
     }
 
-    private static void bw(FittableMapper mapper, int N, Object[] fw_traces, Anc[] anc_seq,
+    private static void bw(FittableMapper mapper, int N, Object[] fw_traces, VectorBase[] ys, Anc[] anc_seq,
                            VectorBase tC, long stream /* -> */,
                            VectorBase buf_t, VectorBase buf_tC, FittableMapper buf_mapper) {
         for (int i = N - 1; i >= 0; i--) {
             mapper.assembleT(tC, anc_seq[i + 1].F, anc_seq[i + 1].B, stream /* -> */, buf_t);
-            mapper.bw(fw_traces[i], buf_t, stream /* -> */, buf_tC, buf_mapper);
+            mapper.bw(fw_traces[i], ys[i], buf_t, stream /* -> */, buf_tC, buf_mapper);
         }
     }
 }

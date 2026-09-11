@@ -12,6 +12,7 @@ import com.github.magif1712.smarter_touhou_maids.features.smarter.agent.registry
 import com.github.magif1712.smarter_touhou_maids.features.smarter.state.MaidSmarterState;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.event.TickEvent;
@@ -187,13 +188,17 @@ public class SmarterClientService {
         LOGGER.info("[ReflexArc] 初始化 ReflexArcSystem...");
         EntityMaid maid = getMaidFromSources();
 
-        // 组装 config：只复制 maid 的 AiModes（各层 mode id）。
+        // 组装 config：逐层走 SmarterClientState.getMode() 读当前有效模式选择（pending 优先，NBT 兜底）。
+        // 不再走 MaidSmarterState.getAiModes()（只读 persistentData，绕过 pending 缓存）——
+        // 客户端 persistentData 不自动双端同步（Forge 服务端专属），maid 重放后为空，
+        // 导致 init 用默认模式而非用户选择。UI（ModeSelectorPanel）走 getMode 有 pending 兜底，
+        // init 也必须走同一路径（真善美第2条：Y 在 X 上层，读法切换不改调用方）。
         // maid 为 null 时 config 为空，registry.resolve("") fallback 到各层默认 entry（旧存档兼容）。
         // 真善美第3条：外周不再硬编码下层特定参数（如 urana 的 minDt key）进 config——
         // per-maid 参数由各层 factory 经 maid 查 ParamStore 自取，nbtKey 由该层自备。换 process 时外周零改动。
         CompoundTag config = new CompoundTag();
         if (maid != null) {
-            config.merge(MaidSmarterState.getAiModes(maid));
+            buildConfigFromPending(maid, config);
         }
 
         // 持久化槽位（C3/C4）：load 时取最新已有版本（无则新版本路径，各层 load 见文件缺失则保持默认）。
@@ -266,6 +271,44 @@ public class SmarterClientService {
      */
     public IAgent getAgent() {
         return agent;
+    }
+
+    /**
+     * 用 SmarterClientState.getMode()（pending 优先，NBT 兜底）逐层遍历 registry 树组装 config。
+     * <p>
+     * 与 UI（ModeSelectorPanel）和 SmarterLayerWalker 走同一路径（真善美第2条：统一读入口，
+     * Y 在 X 上层，读法切换不改调用方）。不再走 MaidSmarterState.getAiModes()（只读 persistentData，
+     * 绕过 pending 缓存，客户端 persistentData 不自动双端同步）。
+     * <p>
+     * 遍历结构与 SmarterLayerWalker 一致：递归链（agent→ai→process→nn）+ 叶子层（sensor、effector）。
+     */
+    private static void buildConfigFromPending(EntityMaid maid, CompoundTag config) {
+        buildConfigChain(maid, config, RegistryIds.AGENT);
+        buildConfigLeaf(maid, config, RegistryIds.SENSOR);
+        buildConfigLeaf(maid, config, RegistryIds.EFFECTOR);
+    }
+
+    private static void buildConfigChain(EntityMaid maid, CompoundTag config, ResourceLocation registryId) {
+        Registry<?> registry = RegistryManager.INSTANCE.get(registryId);
+        if (registry == null) return;
+        ResourceLocation currentId = SmarterClientState.INSTANCE.getMode(maid, registryId);
+        if (currentId == null) {
+            currentId = registry.getDefaultId();
+        }
+        config.putString(registryId.toString(), currentId.toString());
+        RegistryEntry<?> entry = registry.get(currentId);
+        if (entry != null && entry.getSubRegistryId() != null) {
+            buildConfigChain(maid, config, entry.getSubRegistryId());
+        }
+    }
+
+    private static void buildConfigLeaf(EntityMaid maid, CompoundTag config, ResourceLocation registryId) {
+        Registry<?> registry = RegistryManager.INSTANCE.get(registryId);
+        if (registry == null) return;
+        ResourceLocation currentId = SmarterClientState.INSTANCE.getMode(maid, registryId);
+        if (currentId != null) {
+            config.putString(registryId.toString(), currentId.toString());
+        }
     }
 
     private SmarterClientService() {

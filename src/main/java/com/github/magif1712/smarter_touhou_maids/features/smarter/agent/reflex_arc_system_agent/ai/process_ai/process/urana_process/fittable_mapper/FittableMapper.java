@@ -33,7 +33,7 @@ public interface FittableMapper extends AutoCloseable {
 
     void fw(VectorBase x, long stream /* -> */, VectorBase y, Object fwTraceForBw);
 
-    void bw(Object fwTraceForBw, VectorBase t, long stream /* -> */, VectorBase bufTc, FittableMapper bufMapper);
+    void bw(Object fwTraceForBw, VectorBase y, VectorBase t, long stream /* -> */, VectorBase bufTc, FittableMapper bufMapper);
 
     void zeroGradient(long stream /* -> */, VectorBase gradVec);
 

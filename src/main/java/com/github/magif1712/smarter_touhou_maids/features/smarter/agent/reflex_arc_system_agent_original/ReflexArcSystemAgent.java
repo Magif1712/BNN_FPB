@@ -4,7 +4,7 @@ import com.github.magif1712.smarter_touhou_maids.core.containers.vector.BoolVect
 import com.github.magif1712.smarter_touhou_maids.core.diagnostics.MemoryDiagnostics;
 import com.github.magif1712.smarter_touhou_maids.core.execution.event.Event;
 import com.github.magif1712.smarter_touhou_maids.core.execution.stream.Stream;
-import com.github.magif1712.smarter_touhou_maids.features.smarter.agent.reflex_arc_system_agent_original.sensor.possession_sensor.possession.core.PossessionManager;
+import com.github.magif1712.smarter_touhou_maids.features.smarter.possession.core.PossessionManager;
 import com.github.magif1712.smarter_touhou_maids.features.smarter.agent.IAgent;
 import com.github.magif1712.smarter_touhou_maids.features.smarter.agent.SmarterClientService;
 import com.github.magif1712.smarter_touhou_maids.features.smarter.agent.persistence.SaveSlot;
